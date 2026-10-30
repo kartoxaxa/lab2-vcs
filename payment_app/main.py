@@ -1,6 +1,7 @@
 """Демонстрационное приложение системы обработки платежей."""
 
 from logger import get_logger
+from payment_app.analytics import summarize
 from payment_app.gateways import (
     BelagroprombankGateway,
     BelinvestbankGateway,
@@ -30,6 +31,7 @@ def main() -> None:
     payments = processor.pay(1500.50)
     for payment in payments:
         logger.info(payment.message)
+    logger.info("Сводка по платежам: %s", summarize(payments))
 
     storage = ResultStorage("результаты_платежей.json")
     storage.save_payments(payments)
