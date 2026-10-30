@@ -1,5 +1,6 @@
 """Демонстрационное приложение системы обработки платежей."""
 
+from logger import get_logger
 from payment_app.gateways import (
     BelagroprombankGateway,
     BelinvestbankGateway,
@@ -8,6 +9,8 @@ from payment_app.gateways import (
 )
 from payment_app.payment_processor import PaymentProcessor
 from payment_app.storage import ResultStorage
+
+logger = get_logger(__name__)
 
 
 def main() -> None:
@@ -20,32 +23,32 @@ def main() -> None:
 
     processor = PaymentProcessor(gateways)
 
-    print("=== Система обработки платежей запущена ===")
-    print("Клиент: Иван Петрович, г. Минск, +375 (29) 123-45-67")
-    print("Сумма к оплате: 1500.50 BYN")
+    logger.info("=== Система обработки платежей запущена ===")
+    logger.info("Клиент: Иван Петрович, г. Минск, +375 (29) 123-45-67")
+    logger.info("Сумма к оплате: 1500.50 BYN")
 
     payments = processor.pay(1500.50)
     for payment in payments:
-        print(payment.message)
+        logger.info(payment.message)
 
     storage = ResultStorage("результаты_платежей.json")
     storage.save_payments(payments)
-    print("Результаты сохранены в результаты_платежей.json")
+    logger.info("Результаты сохранены в результаты_платежей.json")
 
     transaction_id = next(
         (payment.transaction_id for payment in payments if payment.success), ""
     )
     if transaction_id:
-        print(f"Возврат по TX={transaction_id}")
+        logger.info("Возврат по TX=%s", transaction_id)
         refunds = processor.refund(transaction_id)
         for refund in refunds:
-            print(refund.message)
+            logger.info(refund.message)
         storage.save_refunds(refunds)
 
-    print("--- Платёж только через Приорбанк и Белинвестбанк ---")
+    logger.info("--- Платёж только через Приорбанк и Белинвестбанк ---")
     extended = PaymentProcessor([gateways[1], gateways[3]])
     for payment in extended.pay(500.00):
-        print(payment.message)
+        logger.info(payment.message)
 
 
 if __name__ == "__main__":
