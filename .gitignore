@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+venv/
+.venv/
+.idea/
+*.log
+.pytest_cache/
+logs/
+результаты_платежей.json
