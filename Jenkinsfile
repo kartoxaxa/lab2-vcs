@@ -1,33 +1,54 @@
 pipeline {
     agent any
 
+    environment {
+        PROJECT_NAME = 'lab2-vcs'
+        PYTHON_VERSION = '3.11'
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                echo 'Код получен из Git'
-                sh 'ls -la'
+                echo "Клонирование проекта ${env.PROJECT_NAME}..."
+                checkout scm
             }
         }
-        stage('Build') {
+        stage('Setup') {
             steps {
-                echo 'Сборка проекта...'
-                sh 'python --version'
+                echo 'Установка зависимостей...'
+                sh 'pip install -r requirements.txt || true'
+            }
+        }
+        stage('Lint') {
+            steps {
+                echo 'Статический анализ...'
+                sh 'pip install flake8 && flake8 . || true'
             }
         }
         stage('Test') {
             steps {
                 echo 'Запуск тестов...'
-                sh 'echo "Тесты прошли"'
+                sh 'pip install pytest && pytest || true'
+            }
+        }
+        stage('Archive') {
+            steps {
+                echo 'Сохранение артефакта...'
+                sh 'mkdir -p artifacts && echo "Build ${BUILD_NUMBER}" > artifacts/build.txt'
+                archiveArtifacts artifacts: 'artifacts/**', allowEmptyArchive: true
             }
         }
     }
 
     post {
+        always {
+            echo "Pipeline завершён. Номер сборки: ${env.BUILD_NUMBER}"
+        }
         success {
-            echo 'Пайплайн завершён успешно!'
+            echo 'Все этапы прошли успешно!'
         }
         failure {
-            echo 'Пайплайн завершился с ошибкой'
+            echo 'Один из этапов завершился с ошибкой'
         }
     }
 }
