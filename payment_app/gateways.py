@@ -3,124 +3,133 @@
 import uuid
 from abc import ABC, abstractmethod
 
-from payment_app.models import PaymentResult, RefundResult
+from logger import get_logger
+from payment_app.models import PaymentError, PaymentResult, RefundResult
+
+logger = get_logger(__name__)
 
 
 class IPaymentGateway(ABC):
-    """Абстрактный узел сети: единая точка взаимодействия с шлюзом."""
+    """Абстрактный платёжный шлюз: единая точка взаимодействия."""
 
     display_name: str = "?"
 
     @abstractmethod
     def pay(self, amount: float) -> PaymentResult:
         """Провести платёж на указанную сумму."""
-        ...
 
     @abstractmethod
     def refund(self, transaction_id: str) -> RefundResult:
         """Вернуть средства по идентификатору транзакции."""
-        ...
 
 
-class BelagroprombankGateway(IPaymentGateway):
+class UuidGateway(IPaymentGateway):
+    """Базовый шлюз: UUID-транзакция, маскирование учётных данных, логирование.
+
+    Конкретные шлюзы отличаются только названием, префиксом транзакции
+    и именем учётных данных, поэтому вся логика вынесена в этот класс.
+    """
+
+    prefix: str = "GEN"
+    credential_name: str = "credential"
+
+    def __init__(self, credential: str) -> None:
+        """Сохранить учётные данные шлюза (merchant_id, ключ API, shop_id).
+
+        Args:
+            credential: идентификатор продавца или ключ доступа.
+        """
+        self._credential = credential
+
+    @property
+    def _masked_credential(self) -> str:
+        """Вернуть учётные данные без секретной части (для журнала)."""
+        if len(self._credential) <= 6:
+            return "***"
+        return f"{self._credential[:6]}..."
+
+    def pay(self, amount: float) -> PaymentResult:
+        """Провести платёж и вернуть результат операции.
+
+        Args:
+            amount: сумма платежа в BYN.
+
+        Returns:
+            Результат успешного платежа с идентификатором транзакции.
+
+        Raises:
+            PaymentError: если сумма не положительная.
+        """
+        if amount <= 0:
+            raise PaymentError("Сумма платежа должна быть положительной")
+        transaction_id = f"{self.prefix}-{uuid.uuid4().hex[:8].upper()}"
+        logger.info(
+            "Платёж %.2f BYN через %s (%s=%s)",
+            amount,
+            self.display_name,
+            self.credential_name,
+            self._masked_credential,
+        )
+        return PaymentResult(
+            gateway=self.display_name,
+            success=True,
+            transaction_id=transaction_id,
+            message=(
+                f"Платёж {amount:.2f} BYN через {self.display_name} "
+                f"({self.credential_name}={self._masked_credential}) выполнен. "
+                f"TX={transaction_id}"
+            ),
+        )
+
+    def refund(self, transaction_id: str) -> RefundResult:
+        """Вернуть средства по идентификатору транзакции.
+
+        Args:
+            transaction_id: идентификатор исходной транзакции.
+
+        Returns:
+            Результат возврата средств.
+
+        Raises:
+            PaymentError: если идентификатор транзакции пустой.
+        """
+        if not transaction_id:
+            raise PaymentError("Идентификатор транзакции не может быть пустым")
+        logger.info("Возврат по TX=%s через %s", transaction_id, self.display_name)
+        return RefundResult(
+            gateway=self.display_name,
+            success=True,
+            message=f"Возврат по TX={transaction_id} через {self.display_name} выполнен.",
+        )
+
+
+class BelagroprombankGateway(UuidGateway):
+    """Шлюз Белагропромбанка."""
+
     display_name = "Белагропромбанк"
-
-    def __init__(self, merchant_id: str):
-        self._merchant_id = merchant_id
-
-    def pay(self, amount: float) -> PaymentResult:
-        tx = f"BAB-{uuid.uuid4().hex[:8].upper()}"
-        return PaymentResult(
-            gateway=self.display_name,
-            success=True,
-            transaction_id=tx,
-            message=(
-                f"Платёж {amount:.2f} BYN через Белагропромбанк "
-                f"(merchant_id={self._merchant_id}) выполнен. TX={tx}"
-            ),
-        )
-
-    def refund(self, transaction_id: str) -> RefundResult:
-        return RefundResult(
-            gateway=self.display_name,
-            success=True,
-            message=f"Возврат по TX={transaction_id} через Белагропромбанк выполнен.",
-        )
+    prefix = "BAB"
+    credential_name = "merchant_id"
 
 
-class PriorbankGateway(IPaymentGateway):
+class PriorbankGateway(UuidGateway):
+    """Шлюз Приорбанка."""
+
     display_name = "Приорбанк"
-
-    def __init__(self, api_key: str):
-        self._api_key = api_key
-
-    def pay(self, amount: float) -> PaymentResult:
-        tx = f"PRI-{uuid.uuid4().hex[:8].upper()}"
-        return PaymentResult(
-            gateway=self.display_name,
-            success=True,
-            transaction_id=tx,
-            message=(
-                f"Платёж {amount:.2f} BYN через Приорбанк "
-                f"(key={self._api_key[:6]}...) выполнен. TX={tx}"
-            ),
-        )
-
-    def refund(self, transaction_id: str) -> RefundResult:
-        return RefundResult(
-            gateway=self.display_name,
-            success=True,
-            message=f"Возврат по TX={transaction_id} через Приорбанк выполнен.",
-        )
+    prefix = "PRI"
+    credential_name = "key"
 
 
-class BPSberbankGateway(IPaymentGateway):
+class BPSberbankGateway(UuidGateway):
+    """Шлюз БПС-Сбербанк."""
+
     display_name = "БПС-Сбербанк"
-
-    def __init__(self, shop_id: str):
-        self._shop_id = shop_id
-
-    def pay(self, amount: float) -> PaymentResult:
-        tx = f"BPS-{uuid.uuid4().hex[:8].upper()}"
-        return PaymentResult(
-            gateway=self.display_name,
-            success=True,
-            transaction_id=tx,
-            message=(
-                f"Платёж {amount:.2f} BYN через БПС-Сбербанк "
-                f"(shop_id={self._shop_id}) выполнен. TX={tx}"
-            ),
-        )
-
-    def refund(self, transaction_id: str) -> RefundResult:
-        return RefundResult(
-            gateway=self.display_name,
-            success=True,
-            message=f"Возврат по TX={transaction_id} через БПС-Сбербанк выполнен.",
-        )
+    prefix = "BPS"
+    credential_name = "shop_id"
 
 
-class BelinvestbankGateway(IPaymentGateway):
+class BelinvestbankGateway(UuidGateway):
+    """Шлюз Белинвестбанка."""
+
     display_name = "Белинвестбанк"
-
-    def __init__(self, wallet_id: str):
-        self._wallet_id = wallet_id
-
-    def pay(self, amount: float) -> PaymentResult:
-        tx = f"BIW-{uuid.uuid4().hex[:8].upper()}"
-        return PaymentResult(
-            gateway=self.display_name,
-            success=True,
-            transaction_id=tx,
-            message=(
-                f"Платёж {amount:.2f} BYN через Белинвестбанк "
-                f"(wallet={self._wallet_id}) выполнен. TX={tx}"
-            ),
-        )
-
-    def refund(self, transaction_id: str) -> RefundResult:
-        return RefundResult(
-            gateway=self.display_name,
-            success=True,
-            message=f"Возврат по TX={transaction_id} через Белинвестбанк выполнен.",
-        )
+    prefix = "BIW"
+    credential_name = "wallet"

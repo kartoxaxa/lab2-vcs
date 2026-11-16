@@ -1,0 +1,48 @@
+﻿===== PYLINT =====
+************* Module payment_app.gateways
+payment_app\gateways.py:17:8: W2301: Unnecessary ellipsis constant (unnecessary-ellipsis)
+payment_app\gateways.py:22:8: W2301: Unnecessary ellipsis constant (unnecessary-ellipsis)
+payment_app\gateways.py:25:0: C0115: Missing class docstring (missing-class-docstring)
+payment_app\gateways.py:51:0: C0115: Missing class docstring (missing-class-docstring)
+payment_app\gateways.py:77:0: C0115: Missing class docstring (missing-class-docstring)
+payment_app\gateways.py:103:0: C0115: Missing class docstring (missing-class-docstring)
+************* Module payment_app.main
+payment_app\main.py:17:0: C0116: Missing function or method docstring (missing-function-docstring)
+************* Module payment_app.models
+payment_app\models.py:16:4: C0116: Missing function or method docstring (missing-function-docstring)
+payment_app\models.py:28:4: C0116: Missing function or method docstring (missing-function-docstring)
+************* Module payment_app.payment_processor
+payment_app\payment_processor.py:19:4: C0116: Missing function or method docstring (missing-function-docstring)
+payment_app\payment_processor.py:24:19: W0718: Catching too general exception Exception (broad-exception-caught)
+payment_app\payment_processor.py:35:4: C0116: Missing function or method docstring (missing-function-docstring)
+payment_app\payment_processor.py:40:19: W0718: Catching too general exception Exception (broad-exception-caught)
+************* Module payment_app.storage
+payment_app\storage.py:16:4: C0116: Missing function or method docstring (missing-function-docstring)
+payment_app\storage.py:19:4: C0116: Missing function or method docstring (missing-function-docstring)
+payment_app\storage.py:22:4: C0116: Missing function or method docstring (missing-function-docstring)
+************* Module test_analytics
+tests\test_analytics.py:7:0: C0116: Missing function or method docstring (missing-function-docstring)
+tests\test_analytics.py:22:0: C0116: Missing function or method docstring (missing-function-docstring)
+************* Module test_gateways
+tests\test_gateways.py:21:0: C0116: Missing function or method docstring (missing-function-docstring)
+tests\test_gateways.py:25:0: C0116: Missing function or method docstring (missing-function-docstring)
+tests\test_gateways.py:25:29: W0621: Redefining name 'gateway' from outer scope (line 21) (redefined-outer-name)
+tests\test_gateways.py:34:0: C0116: Missing function or method docstring (missing-function-docstring)
+tests\test_gateways.py:34:32: W0621: Redefining name 'gateway' from outer scope (line 21) (redefined-outer-name)
+************* Module test_payment_processor
+tests\test_payment_processor.py:8:0: C0115: Missing class docstring (missing-class-docstring)
+tests\test_payment_processor.py:29:0: C0116: Missing function or method docstring (missing-function-docstring)
+tests\test_payment_processor.py:40:0: C0116: Missing function or method docstring (missing-function-docstring)
+tests\test_payment_processor.py:48:0: C0116: Missing function or method docstring (missing-function-docstring)
+tests\test_payment_processor.py:51:11: C1803: "processor.pay(...) == []" can be simplified to "not processor.pay(...)", if it is strictly a sequence, as an empty list is falsey (use-implicit-booleaness-not-comparison)
+tests\test_payment_processor.py:52:11: C1803: "processor.refund(...) == []" can be simplified to "not processor.refund(...)", if it is strictly a sequence, as an empty list is falsey (use-implicit-booleaness-not-comparison)
+************* Module test_storage
+tests\test_storage.py:9:0: C0116: Missing function or method docstring (missing-function-docstring)
+
+-----------------------------------
+Your code has been rated at 8.62/10
+
+===== FLAKE8 =====
+===== MYPY =====
+Success: no issues found in 7 source files
+===== BANDIT =====

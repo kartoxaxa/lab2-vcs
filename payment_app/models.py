@@ -4,6 +4,14 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict
 
 
+class PaymentError(Exception):
+    """Ошибка выполнения платёжной операции.
+
+    Используется для ошибок бизнес-логики: некорректная сумма,
+    пустой идентификатор транзакции, отказ шлюза.
+    """
+
+
 @dataclass
 class PaymentResult:
     """Результат проведения платежа через конкретный шлюз."""
@@ -14,6 +22,7 @@ class PaymentResult:
     message: str
 
     def to_dict(self) -> Dict[str, Any]:
+        """Преобразовать результат в словарь для сериализации в JSON."""
         return asdict(self)
 
 
@@ -26,4 +35,5 @@ class RefundResult:
     message: str
 
     def to_dict(self) -> Dict[str, Any]:
+        """Преобразовать результат в словарь для сериализации в JSON."""
         return asdict(self)

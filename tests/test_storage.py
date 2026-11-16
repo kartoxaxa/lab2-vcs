@@ -7,6 +7,7 @@ from payment_app.storage import ResultStorage
 
 
 def test_save_and_load(tmp_path):
+    """Сохранённые платежи и возвраты читаются обратно из JSON-файла."""
     path = tmp_path / "results.json"
     storage = ResultStorage(path)
 

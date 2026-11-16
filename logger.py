@@ -1,23 +1,25 @@
 """Настройка логирования приложения."""
 
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+_CONSOLE_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+_FILE_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s:%(lineno)d | %(message)s"
 
-def get_logger(name: str = "payment_app", log_dir: str = "logs") -> logging.Logger:
-    """Вернуть логгер с выводом в консоль и в файл с ротацией."""
-    logger = logging.getLogger(name)
-    if logger.handlers:
-        return logger
 
-    logger.setLevel(logging.INFO)
+def _configure_root(log_dir: str) -> None:
+    """Настроить корневой логгер один раз: консоль и файл с ротацией."""
+    root = logging.getLogger()
+    if root.handlers:
+        return
 
-    console = logging.StreamHandler()
-    console.setFormatter(
-        logging.Formatter("%(asctime)s | %(levelname)-8s | %(message)s", "%H:%M:%S")
-    )
-    logger.addHandler(console)
+    root.setLevel(logging.DEBUG)
+
+    console = logging.StreamHandler(stream=sys.stdout)
+    console.setLevel(logging.INFO)
+    console.setFormatter(logging.Formatter(_CONSOLE_FORMAT, "%H:%M:%S"))
 
     directory = Path(log_dir)
     directory.mkdir(parents=True, exist_ok=True)
@@ -27,9 +29,22 @@ def get_logger(name: str = "payment_app", log_dir: str = "logs") -> logging.Logg
         backupCount=3,
         encoding="utf-8",
     )
-    file_handler.setFormatter(
-        logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
-    )
-    logger.addHandler(file_handler)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter(_FILE_FORMAT))
 
-    return logger
+    root.addHandler(console)
+    root.addHandler(file_handler)
+
+
+def get_logger(name: str = "payment_app", log_dir: str = "logs") -> logging.Logger:
+    """Вернуть логгер модуля, при первом вызове настроив обработчики.
+
+    Args:
+        name: имя логгера, обычно __name__ модуля.
+        log_dir: каталог для файла журнала.
+
+    Returns:
+        Настроенный логгер с выводом в консоль (INFO) и файл (DEBUG).
+    """
+    _configure_root(log_dir)
+    return logging.getLogger(name)

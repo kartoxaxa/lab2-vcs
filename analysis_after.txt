@@ -1,0 +1,9 @@
+﻿===== PYLINT =====
+
+-------------------------------------------------------------------
+Your code has been rated at 10.00/10 (previous run: 9.88/10, +0.12)
+
+===== FLAKE8 =====
+===== MYPY =====
+Success: no issues found in 7 source files
+===== BANDIT =====

@@ -22,7 +22,16 @@ pipeline {
         stage('Lint') {
             steps {
                 echo 'Статический анализ...'
-                sh 'pip install flake8 && flake8 . || true'
+                sh 'pip install pylint flake8 mypy bandit || true'
+                sh 'pylint payment_app tests --fail-under=7.0 || true'
+                sh 'flake8 payment_app tests --max-line-length=100 || true'
+                sh 'mypy payment_app || true'
+                sh 'bandit -r payment_app -f json -o bandit_report.json || true'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'bandit_report.json', allowEmptyArchive: true
+                }
             }
         }
         stage('Test') {

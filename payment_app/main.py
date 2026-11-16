@@ -14,7 +14,19 @@ from payment_app.storage import ResultStorage
 logger = get_logger(__name__)
 
 
+def _demo_error_handling(processor: PaymentProcessor) -> None:
+    """Показать обработку некорректной суммы: ошибки логируются, работа идёт дальше."""
+    logger.info("--- Проверка обработки ошибок ---")
+    rejected = processor.pay(-100.0)
+    logger.warning(
+        "Платежи с отрицательной суммой отклонены: %d из %d",
+        sum(1 for result in rejected if not result.success),
+        len(rejected),
+    )
+
+
 def main() -> None:
+    """Провести демонстрационные платежи, возврат и сохранить результаты."""
     gateways = [
         BelagroprombankGateway("BY_AGRO_000042"),
         PriorbankGateway("PRIOR_TEST_51Hxxxx"),
@@ -25,7 +37,7 @@ def main() -> None:
     processor = PaymentProcessor(gateways)
 
     logger.info("=== Система обработки платежей запущена ===")
-    logger.info("Клиент: Иван Петрович, г. Минск, +375 (29) 123-45-67")
+    logger.info("Клиент: id=C-1042 (персональные данные не логируются)")
     logger.info("Сумма к оплате: 1500.50 BYN")
 
     payments = processor.pay(1500.50)
@@ -51,6 +63,8 @@ def main() -> None:
     extended = PaymentProcessor([gateways[1], gateways[3]])
     for payment in extended.pay(500.00):
         logger.info(payment.message)
+
+    _demo_error_handling(processor)
 
 
 if __name__ == "__main__":
